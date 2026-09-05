@@ -1,0 +1,19 @@
+# Caches Python et dépendances locales
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+
+# Fichiers locaux et sauvegardes de session
+.env
+.env.*
+!.env.example
+.DS_Store
+checkpoints/
+CHECKPOINT.md
+.agents/
+.codex/
+
+# Intermédiaires de compilation LaTeX
+tex/aux/

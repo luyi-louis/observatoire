@@ -1,0 +1,38 @@
+[
+  {
+    "file": "ds140-gold-2022.xlsx",
+    "url": "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/ds140-gold-2022.xlsx",
+    "sha256": "025f3eb98adb606cc214b82caa70646b80cf9debdf6544dbafce361283c1c480",
+    "retrievedAt": "2026-09-05"
+  },
+  {
+    "file": "ds140-silver-2021.xlsx",
+    "url": "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/ds140-silver-2021.xlsx",
+    "sha256": "e57b952a5fd469291341bf275fbaa1c20dfd0caa9b40f383a2a19076efa9e997",
+    "retrievedAt": "2026-09-05"
+  },
+  {
+    "file": "ds140-copper-2020.xlsx",
+    "url": "https://d9-wret.s3.us-west-2.amazonaws.com/assets/palladium/production/s3fs-public/media/files/ds140-copper-2020.xlsx",
+    "sha256": "8c5e3682ceae94a06146c4b5000c4499521b02fcbd7dda5954e9ac4eb17ffc3f",
+    "retrievedAt": "2026-09-05"
+  },
+  {
+    "file": "CMO-Historical-Data-Monthly.xlsx",
+    "url": "https://thedocs.worldbank.org/en/doc/5d903e848db1d1b83e0ec8f744e55570-0350012021/related/CMO-Historical-Data-Monthly.xlsx",
+    "sha256": "bd89b83eeceadaecb803018c104f76b316d2df3fae28ef7afde48021100c7e11",
+    "retrievedAt": "2026-09-05"
+  },
+  {
+    "file": "CMO-Historical-Data-Monthly-2026.xlsx",
+    "url": "https://thedocs.worldbank.org/en/doc/18675f1d1639c7a34d463f59263ba0a2-0050012025/related/CMO-Historical-Data-Monthly.xlsx",
+    "sha256": "83a320affafc83512d4af4c7198af6ce086326c8b6923d9f64dd905172f86290",
+    "retrievedAt": "2026-09-05"
+  },
+  {
+    "file": "eia-petrole-annuel.html",
+    "url": "https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?f=a&n=pet&s=f000000__3",
+    "sha256": "266a8e3a18ad7dfca3f4a538d6f026afba57d3cdb5317a475688eddf3a9594ae",
+    "retrievedAt": "2026-09-05"
+  }
+]

@@ -1,0 +1,3 @@
+Unit Value ($/t)
+Unit value is defined as the value of 1 metric ton (t) of silver apparent consumption. Unit value data for 1900–98 were from the MP98. Unit value data for 1999 to the most recent year were from the MYB. Unit value data for 1900 to the most recent year represent the average value per metric ton of silver of a minimum purity of 99.9 percent.
+
