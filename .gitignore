@@ -17,3 +17,9 @@ CHECKPOINT.md
 
 # Intermédiaires de compilation LaTeX
 tex/aux/
+
+# Scripts jetables (règle globale de Louis du 2026-10-07)
+sandbox-disposable/
+
+# Données propriétaires, à toute profondeur (règle globale de Louis du 2026-10-10)
+private/
