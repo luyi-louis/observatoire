@@ -6,8 +6,14 @@
 #  Usage : ./build-observatoire-appimage.sh                 # → dist/Observatoire-v<version>-x86_64.AppImage
 #          ./build-observatoire-appimage.sh --install       # + entrée de menu (sans root)
 #          ./build-observatoire-appimage.sh --uninstall     # retire l'entrée de menu
-#          PRODUCT_VERSION=0.2.0 ./build-observatoire-appimage.sh
+#          PRODUCT_VERSION=0.3.0 ./build-observatoire-appimage.sh
 #          NW_FLAVOR=sdk ./build-observatoire-appimage.sh   # avec DevTools, pour sonder
+#
+#  Livraison : l'AppImage livrable (saveur normal) est aussi COPIÉE dans le
+#  dossier Téléchargements (xdg-user-dir DOWNLOAD), par livrer-telechargements.sh
+#  de la chaîne d'empaquetage voisine (LIVRAISON_SH=<chemin> pour un autre) :
+#  copie vérifiée par cmp, un ancien fichier différent est gardé sous
+#  <nom>-avant-<date>. Script absent (clone ailleurs) : on le dit, sans livrer.
 #
 #  Chaîne NW.js classique (NW.js v0.113.0, runtime AppImage type-2 épinglé,
 #  --no-sandbox, StartupWMClass) : une fenêtre
@@ -35,7 +41,7 @@ APPNAME="Observatoire"
 LOWER="observatoire"
 
 # La version du LIVRABLE : écrite ici seulement.
-PRODUCT_VERSION="${PRODUCT_VERSION:-0.1.0}"
+PRODUCT_VERSION="${PRODUCT_VERSION:-0.2.0}"
 FLAVOR="${NW_FLAVOR:-normal}"
 NW_VERSION="v0.113.0"
 
@@ -48,7 +54,7 @@ AIRUNTIME_SHA="1cc49bcf1e2ccd593c379adb17c9f85a36d619088296504de95b1d06215aebbf"
 AIRUNTIME_URL="https://github.com/AppImage/type2-runtime/releases/download/continuous/runtime-x86_64"
 AITOOL_URL="https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage"
 SHARED="${SHARED_PACKAGING:-}"
-CACHE="$HERE/cache"
+CACHE="${CACHE:-$HERE/cache}"   # réglable, comme DIST : la console de la chaîne les veut hors du dépôt
 
 BIN="$HOME/.local/bin"
 APPS="$HOME/.local/share/applications"
@@ -71,6 +77,22 @@ fi
 DO_INSTALL=0
 [ "${1:-}" = "--install" ] && DO_INSTALL=1
 case "$FLAVOR" in normal|sdk) ;; *) die "NW_FLAVOR=$FLAVOR inconnu (normal | sdk)";; esac
+
+# Livraison dans Téléchargements : le dossier est cherché AVANT de compiler,
+# pour l'apprendre en une seconde. La variante sdk, de débogage, n'est jamais livrée.
+LIVRAISON_SH="${LIVRAISON_SH:-$(dirname "$ROOT")/chaine-empaquetage/packaging/livrer-telechargements.sh}"
+LIVRER=0
+if [ "$FLAVOR" = "normal" ]; then
+  if [ -f "$LIVRAISON_SH" ]; then
+    # shellcheck source=/dev/null
+    . "$LIVRAISON_SH"
+    DL="$(telechargements_dir)" || die "dossier Téléchargements introuvable (DOWNLOADS_DIR=<dossier> pour en imposer un)"
+    LIVRER=1
+  else
+    printf '\n\033[1;33m! livrer-telechargements.sh introuvable : %s\033[0m\n' "$LIVRAISON_SH"
+    echo "  L'AppImage restera dans $DIST seulement."
+  fi
+fi
 
 # Un fichier : le premier cache existant, sinon téléchargé dans cache/.
 fetch(){ # nom, url, sha256 attendu (vide = non vérifié)
@@ -195,7 +217,7 @@ GenericName=Analyse des cours des matières premières
 Comment=Or, argent, cuivre et pétrole : historiques, moyennes mobiles, RSI, MACD, volatilité
 Exec=$APPNAME
 Icon=$LOWER
-Categories=Office;Finance;Education;
+Categories=Office;Finance;
 Keywords=or;argent;cuivre;pétrole;Brent;cours;INSEE;RSI;MACD;gold;silver;copper;oil;
 StartupNotify=true
 # Doit égaler le --class= passé par AppRun, sinon la barre des tâches perd l'icône.
@@ -217,6 +239,11 @@ chmod +x "$OUT"
 rm -rf "$WORK"
 say "FAIT — $(du -h "$OUT" | cut -f1)"
 echo "  → $OUT"
+if [ "$LIVRER" = "1" ]; then
+  livrer_telechargements "$OUT" || die "livraison dans $DL en échec (l'AppImage est intacte dans $DIST)"
+  echo "  LIVRÉ → $LIVRE"
+  [ -z "$LIVRE_AVANT" ] || echo "  ancienne version gardée → $LIVRE_AVANT"
+fi
 
 # ── 6. Intégration au bureau (par utilisateur, sans root) ────────────────────
 if [ "$DO_INSTALL" = "1" ]; then
@@ -234,7 +261,7 @@ GenericName=Analyse des cours des matières premières
 Comment=Or, argent, cuivre et pétrole : historiques, moyennes mobiles, RSI, MACD, volatilité
 Exec=$BIN/${APPNAME}.AppImage
 Icon=$LOWER
-Categories=Office;Finance;Education;
+Categories=Office;Finance;
 Keywords=or;argent;cuivre;pétrole;Brent;cours;INSEE;RSI;MACD;gold;silver;copper;oil;
 StartupNotify=true
 StartupWMClass=$APPNAME
