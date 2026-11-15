@@ -8,6 +8,7 @@ const dom=new JSDOM(html,{runScripts:'dangerously',url:'http://127.0.0.1:8765',b
  w.HTMLAnchorElement.prototype.click=function(){};
 }});
 const w=dom.window,$=id=>w.document.getElementById(id),run=s=>w.eval(s);
+const EMBEDDED=run('DATA.or.length');
 assert.ok($('languageSelect').options.length>=3);
 assert.ok([...$('languageSelect').options].some(o=>o.value==='ru'&&o.textContent==='Русский'));
 assert.equal($('start').value,'1900');assert.equal($('seriesSelect').value,'usgs_or');
@@ -51,19 +52,19 @@ run('exportFigure("price")');
  $('applyOfficial').click();assert.equal($('applyOfficial').disabled,true);run('setLanguage("en")');assert.equal($('applyOfficial').disabled,true);assert.ok($('updateStatus').textContent.startsWith('All four complete INSEE histories'));
  assert.ok($('provenance').textContent.includes('USD / barrel'));
  // Filtering and a partial update never truncate saved history; restoring restores revisions.
- assert.equal(run('DATA.or.length'),439);
+ assert.equal(run('DATA.or.length'),EMBEDDED);
  assert.equal(JSON.parse(w.localStorage.getItem('observatoire.history.v1')).series.or.rows[0].date,'1990-01');
  run("setRange(1);testPack.retrievedAt='2027-01-01T00:00:00Z';previewOfficial(testPack)");$('applyOfficial').click();
  assert.equal(run("DATA.or.find(r=>r.date==='2026-01').price"),100);
  run("DATA.or=[];restoreHistory()");
- assert.equal(run('DATA.or.length'),439);assert.equal(run("DATA.or.find(r=>r.date==='2026-01').price"),100);
+ assert.equal(run('DATA.or.length'),EMBEDDED);assert.equal(run("DATA.or.find(r=>r.date==='2026-01').price"),100);
  // A fresh page restores the complete saved history, including revised prices.
  const savedHistory=w.localStorage.getItem('observatoire.history.v1');
  const reloaded=new JSDOM(html,{runScripts:'dangerously',url:'http://127.0.0.1:8765',beforeParse(other){
   other.ResizeObserver=class{observe(){}};
   other.localStorage.setItem('observatoire.history.v1',savedHistory);
  }});
- assert.equal(reloaded.window.eval('DATA.or.length'),439);
+ assert.equal(reloaded.window.eval('DATA.or.length'),EMBEDDED);
  assert.equal(reloaded.window.eval("DATA.or.find(r=>r.date==='2026-01').price"),100);
  assert.equal(reloaded.window.document.getElementById('start').value,'1900');
  reloaded.window.close();

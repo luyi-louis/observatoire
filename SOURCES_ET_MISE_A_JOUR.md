@@ -48,6 +48,14 @@ Le fichier `mises_a_jour/historique_complet.json` conserve également la derniè
 
 Ouvrir le HTML par double-clic, puis **Sources & mise à jour → Importer une collecte JSON** et sélectionner le second fichier. La prévisualisation et l’application des données fonctionnent hors ligne.
 
+Pour que le HTML **distribué** contienne d’office la dernière collecte, l’y intégrer :
+
+```bash
+python3 outils/integrer_cours.py
+```
+
+L’outil remplace les séries INSEE embarquées par celles de `mises_a_jour/historique_complet.json`, avec la même transformation que le bouton « Utiliser ces données ». Il refuse une collecte incomplète, une unité ou un identifiant différent et tout mois manquant. `--check` vérifie sans écrire ; la construction de l’AppImage l’exige.
+
 **Conserver la collecte JSON** télécharge également la collecte prévisualisée depuis l’interface. Les historiques INSEE appliqués sont sauvegardés dans le stockage du navigateur et restaurés au rechargement. Ce stockage dépend du navigateur et de l’adresse utilisée ; il peut être indisponible pour un fichier local ou effacé. Un message signale un échec de sauvegarde. Le JSON complet reste la sauvegarde portable à conserver. Le JSON n’est pas une sauvegarde des réglages ou des séries CSV personnelles.
 
 Le bouton de collecte directe nécessite le service Python local : les restrictions de lecture entre sites des navigateurs ne permettent pas de garantir une collecte distante depuis un simple fichier HTML.
@@ -97,7 +105,7 @@ node tests/observatoire.test.cjs
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Le 5 septembre 2026, le collecteur et son point d’accès HTTP local ont récupéré les quatre séries : 439 observations chacune, de janvier 1990 à juillet 2026. Ce résultat est une vérification ponctuelle, pas une garantie de disponibilité future.
+Le 5 septembre 2026, le collecteur et son point d’accès HTTP local ont récupéré les quatre séries : 439 observations chacune, de janvier 1990 à juillet 2026. Ce résultat est une vérification ponctuelle, pas une garantie de disponibilité future. Le 15 novembre 2026 : 441 observations chacune, de janvier 1990 à septembre 2026 (publication INSEE du 27 octobre 2026), intégrées au HTML ; la même collecte a été obtenue depuis l’AppImage.
 
 ## Sources anciennes anglophones
 
