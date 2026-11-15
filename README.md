@@ -12,11 +12,13 @@ L’application fonctionne hors ligne, sans installation ni dépendance distante
 - Sources sélectionnables, avec leurs unités, fréquences et définitions explicites.
   Les séries annuelles et mensuelles restent distinctes ; le pétrole américain
   historique n’est pas assimilé au Brent.
-- SMA, EMA, Bollinger, RSI, MACD, volatilité et drawdown ; guide pédagogique
-  et paramètres de calcul dans un onglet dédié.
+- SMA, EMA, Bollinger, RSI, MACD, volatilité et drawdown ; un onglet **Aide**
+  (une fiche par indicateur : définition, lecture, limites), un bouton « ? »
+  sur chaque graphe, puis le guide pédagogique et les paramètres de calcul.
 - Graphiques vectoriels, zoom X/Y/X+Y synchronisable, export SVG et CSV.
   L’or s’affiche par once troy ou par gramme.
-- Interface intégralement disponible en **français, anglais et russe**.
+- Interface intégralement disponible en **français, anglais et russe**,
+  en thème clair ou **sombre** (ou celui du système).
 - Actualisation INSEE à la demande avec conservation de l’historique.
 
 ## Documentation

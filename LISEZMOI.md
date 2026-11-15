@@ -2,7 +2,7 @@
 
 Ouvrir **Observatoire.html** dans un navigateur récent, par double-clic. Ce fichier contient l’interface, les calculs et les historiques annuels anciens USGS/EIA, les historiques mensuels Banque mondiale et les quatre historiques INSEE vérifiés : aucun serveur, installation ou accès Internet nécessaire. Il peut être copié seul sur un autre ordinateur.
 
-Les historiques anciens sont chargés automatiquement et affichés par défaut : métaux dès 1900, pétrole américain dès 1859. Choisir un actif, une courbe source et une période, activer les moyennes mobiles ou Bollinger, puis explorer les graphiques au survol ou au toucher. Les vues RSI/MACD et volatilité/drawdown sont commutables. L’échelle propose cours, base 100 et axe logarithmique. L’onglet « Paramètres & méthode de calcul » rassemble les réglages et un guide pédagogique adapté du document LaTeX : formules, interprétations, exemples et conventions de calcul. Son sommaire donne accès aux huit chapitres. Les onglets sont aussi accessibles au clavier (flèches, Début et Fin).
+Les historiques anciens sont chargés automatiquement et affichés par défaut : métaux dès 1900, pétrole américain dès 1859. Choisir un actif, une courbe source et une période, activer les moyennes mobiles ou Bollinger, puis explorer les graphiques au survol ou au toucher. Les vues RSI/MACD et volatilité/drawdown sont commutables. L’échelle propose cours, base 100 et axe logarithmique. L’onglet **Aide** consacre une fiche à chaque indicateur (moyennes mobiles, Bollinger, RSI, MACD, volatilité, drawdown, rendement annualisé, base 100 et axe logarithmique, ratio or/argent) : ce qu’il mesure, sa définition, comment le lire et ses limites, sans prérequis en finance. Le bouton « ? » de chaque graphe ouvre directement la fiche de ce qui est affiché. L’onglet « Paramètres & méthode de calcul » rassemble les réglages et un guide pédagogique adapté du document LaTeX : formules, interprétations, exemples et conventions de calcul. Son sommaire donne accès aux huit chapitres. Les onglets sont aussi accessibles au clavier (flèches, Début et Fin).
 
 « Importer un CSV » remplace une série ou ajoute une série personnelle pour la session. Format : `date,prix`, dates `AAAA-MM`, prix positifs, un point par mois sans lacune. Le point-virgule et les décimales françaises sont acceptés. Les imports ne sont pas conservés après rechargement. « Exporter » télécharge les valeurs et indicateurs de la période visible.
 
@@ -27,6 +27,10 @@ Les graphes suivent le tutoriel « How to — Make graphs » de Louis Tomczyk : 
 Les valeurs positives peuvent être affichées sur un véritable axe logarithmique, en conservant leurs unités. L’échelle linéaire du cours inclut zéro par défaut, avec une option « Plage des données ». Le RSI garde ses bornes 0–100 ; volatilité et drawdown conservent leur origine. L’écart MACD–signal est tracé en courbe, et les repères 0, 30 et 70 sont annotés là où ils s’appliquent.
 
 La disposition est resserrée : aucun titre visible ni rappel de source sous les graphes, les axes Y identifient la grandeur et son unité. Les légendes sont à l’intérieur des cadres, dans le coin qui croise le moins de segments de données. Chaque bouton **SVG** exporte cette figure compacte avec ses axes et sa légende ; le titre, la période et la provenance sont conservés dans les métadonnées accessibles du SVG. Le bouton **CSV** exporte les valeurs numériques. Aucune incertitude de mesure ni régression n’est ajoutée sans données qui la justifient.
+
+## Thème clair ou sombre
+
+Le sélecteur **Thème** propose Auto (celui du système, par défaut), Clair ou Sombre ; le choix est mémorisé. En sombre, les graphes changent de palette à l’écran, mais les SVG exportés gardent toujours la palette claire des figures (fond blanc, courbe seule noire) décrite ci-dessus.
 
 ## Langues
 

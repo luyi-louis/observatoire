@@ -87,10 +87,31 @@ run('exportFigure("price")');
  assert.ok(gramCSV.includes('"usgs_or";"A";"USD / gramme";"1900";"0,609"'));
  assert.ok($('price').textContent.includes('USD / грамм'));
  run("chosenSeries.or='insee_or';goldMassUnit='ounce';setRange(0)");
+ // Help tab: one card per indicator, opened from the tabs or from the "?" of each chart.
+ run("setLanguage('fr')");assert.equal(w.document.querySelectorAll('#helpPage .help-card').length,9);
+ $('helpTab').click();assert.equal($('helpPage').hidden,false);assert.equal($('analysisPage').hidden,true);
+ assert.ok($('h-rsi').textContent.includes('RSI = 100 − 100 / (1 + RS)'));
+ assert.ok($('helpPage').querySelector('.intro').textContent.includes('«\u00a0Paramètres & méthode de calcul\u00a0»'));
+ run("showPage('analysis')");w.document.querySelector('[data-help="momentum"]').click();
+ assert.equal($('helpPage').hidden,false);assert.equal(w.document.activeElement.id,'h-rsi');
+ run("showPage('analysis');momentum='macd';render()");w.document.querySelector('[data-help="momentum"]').click();assert.equal(w.document.activeElement.id,'h-macd');
+ w.document.querySelector('#h-macd .help-more').dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));assert.equal($('methodPage').hidden,false);
+ run("setLanguage('en')");assert.equal($('helpTab').textContent,'Help');assert.ok($('h-macd').textContent.includes('MACD = EMA12 − EMA26'));
+ run("setLanguage('ru')");assert.equal($('helpTab').textContent,'Справка');assert.equal($('themeSelect').options[2].textContent,'Тёмная');
+ run("momentum='rsi';setLanguage('fr');showPage('analysis')");
+ // Dark theme: tokens and chart palette follow the choice; the exported SVG keeps the light figure palette.
+ $('themeSelect').value='dark';$('themeSelect').dispatchEvent(new w.Event('change'));
+ assert.equal(w.document.documentElement.dataset.theme,'dark');assert.equal(w.localStorage.getItem('observatoire.theme'),'dark');
+ assert.equal(run('SCI===SCI_DARK'),true);assert.ok($('price').innerHTML.includes('fill="#171f1c"'));
+ run('exportFigure("price")');const darkExport=await blob.text();
+ assert.ok(darkExport.includes('fill="white"'));assert.ok(!darkExport.includes('#171f1c'));
+ assert.ok($('price').innerHTML.includes('fill="#171f1c"'));
+ $('themeSelect').value='auto';$('themeSelect').dispatchEvent(new w.Event('change'));
+ assert.equal(w.document.documentElement.dataset.theme,undefined);assert.equal(run('SCI===SCI_LIGHT'),true);
  // The registry accepts further complete locales without a fixed language switch.
  run(`I18N_CATALOGS.es={...I18N_CATALOGS.en,label:'Test language',locale:'es-ES',messages:Object.fromEntries(Object.entries(I18N_CATALOGS.en.messages).map(([k,v])=>[k,'⟦'+v+'⟧']))};setLanguage('es');`);
  assert.equal(w.document.documentElement.lang,'es');assert.ok($('methodTab').textContent.startsWith('⟦'));
  assert.ok($('updateStatus').textContent.startsWith('⟦'));
  run('showPage("analysis")');assert.ok($('price').textContent.includes('⟦Price ['));
- console.log('OK: DOM FR/EN/RU, complete guide, figures, numeric locale, errors, imports, unchanged state, SVG export and an additional language.');w.close();
+ console.log('OK: DOM FR/EN/RU, complete guide, figures, numeric locale, errors, imports, unchanged state, SVG export, help tab, dark theme and an additional language.');w.close();
 })().catch(e=>{console.error(e);process.exitCode=1;w.close()});
