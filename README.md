@@ -25,7 +25,11 @@ L’application fonctionne hors ligne, sans installation ni dépendance distante
 - [Sources officielles et actualisation](SOURCES_ET_MISE_A_JOUR.md)
 - [Provenance et définition des historiques anciens](historiques_anciens/README.md)
 - [Ajouter ou modifier une langue](locales/README.md)
+- [AppImage Linux](empaquetage/README.md)
 - [Document pédagogique LaTeX](tex/main.tex)
+
+Sous Linux, `empaquetage/build-observatoire-appimage.sh` en fait une **AppImage** :
+un seul fichier, double-clic, collecte INSEE comprise si `python3` est présent.
 
 Pour utiliser la collecte INSEE depuis l’interface, lancer :
 
@@ -44,6 +48,7 @@ Les vérifications de base nécessitent Node.js et Python 3 :
 node tests/observatoire.test.cjs
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 outils/integrer_traductions.py --check
+python3 outils/integrer_cours.py --check
 ```
 
 Les tests de navigateur et de DOM sont décrits dans les fichiers de `tests/` et

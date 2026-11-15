@@ -1,0 +1,19 @@
+{
+  "name": "observatoire",
+  "version": "0.0.0",
+  "description": "Observatoire — historiques et indicateurs des cours de l’or, de l’argent, du cuivre et du pétrole.",
+  "author": "Louis Tomczyk et contributeurs",
+  "license": "CC-BY-SA-4.0",
+  "main": "lanceur.html",
+  "single-instance": true,
+  "window": {
+    "title": "Observatoire",
+    "width": 1440,
+    "height": 960,
+    "min_width": 900,
+    "min_height": 600,
+    "resizable": true,
+    "position": "center",
+    "icon": "icon.png"
+  }
+}

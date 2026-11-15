@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Observatoire</title>
+<style>
+ html,body{height:100%;margin:0;background:#f5f6f3;color:#202e2a;font:15px system-ui,sans-serif}
+ body{display:grid;place-items:center}
+</style>
+</head>
+<body>
+<p>Observatoire…</p>
+<script>
+// First page of the NW.js window. AppRun starts the local INSEE collector
+// (outils/actualiser_cours.py --serve) when python3 is available and passes its
+// port in OBSERVATOIRE_PORT. Served from 127.0.0.1, the page offers the
+// « Rechercher les dernières données » button; otherwise the embedded copy
+// opens offline, with every embedded history and the JSON import.
+const env = (typeof nw !== 'undefined' && nw.process ? nw.process : (typeof process !== 'undefined' ? process : {env: {}})).env || {};
+const port = String(env.OBSERVATOIRE_PORT || '');
+const offline = () => location.replace('Observatoire.html');
+if (!/^\d{2,5}$/.test(port)) offline();
+else {
+  const url = 'http://127.0.0.1:' + port + '/';
+  // no-cors: an opaque answer is enough to know that the collector listens.
+  fetch(url, {mode: 'no-cors', cache: 'no-store'}).then(() => location.replace(url), offline);
+}
+</script>
+</body>
+</html>

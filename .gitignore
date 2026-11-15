@@ -23,3 +23,7 @@ sandbox-disposable/
 
 # Données propriétaires, à toute profondeur (règle globale de Louis du 2026-10-10)
 private/
+
+# Empaquetage : runtimes téléchargés et livrables construits
+empaquetage/cache/
+empaquetage/dist/
