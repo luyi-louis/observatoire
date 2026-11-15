@@ -49,7 +49,7 @@ run('exportFigure("price")');
 
  // Official package preview, status and applied state survive language changes.
  run(`window.testPack={format:'observatoire-insee-v1',retrievedAt:'2026-09-05T08:00:00Z',series:Object.fromEntries(Object.entries(OFFICIAL_IDS).map(([k,id])=>[k,{idbank:id,unit:OFFICIAL_UNITS[k],rows:[{date:'2026-01',price:100},{date:'2026-02',price:110}]}]))};previewOfficial(testPack);showPage('sources');`);
- $('applyOfficial').click();assert.equal($('applyOfficial').disabled,true);run('setLanguage("en")');assert.equal($('applyOfficial').disabled,true);assert.ok($('updateStatus').textContent.startsWith('All four complete INSEE histories'));
+ $('applyOfficial').click();assert.equal($('applyOfficial').disabled,true);run('setLanguage("en")');assert.equal($('applyOfficial').disabled,true);assert.ok($('updateStatus').textContent.startsWith('The complete histories (INSEE and bitcoin)'));
  assert.ok($('provenance').textContent.includes('USD / barrel'));
  // Filtering and a partial update never truncate saved history; restoring restores revisions.
  assert.equal(run('DATA.or.length'),EMBEDDED);
@@ -108,6 +108,23 @@ run('exportFigure("price")');
  assert.ok($('price').innerHTML.includes('fill="#171f1c"'));
  $('themeSelect').value='auto';$('themeSelect').dispatchEvent(new w.Event('change'));
  assert.equal(w.document.documentElement.dataset.theme,undefined);assert.equal(run('SCI===SCI_LIGHT'),true);
+ // Free ratio: any numerator and denominator, unit deduced; bitcoin is an asset of its own.
+ run("setLanguage('fr');showPage('analysis')");
+ assert.deepEqual([...$('assets').children].map(b=>b.textContent).slice(-2),['Bitcoin','Ratio']);
+ [...$('assets').children].at(-1).click();
+ assert.equal($('ratioControls').hidden,false);assert.equal($('seriesSelect').hidden,true);
+ assert.equal($('ratioNum').value,'insee_or');assert.equal($('ratioDen').value,'insee_argent');
+ $('ratioDen').value='bitstamp_bitcoin';$('ratioDen').dispatchEvent(new w.Event('change'));
+ assert.ok($('priceTitle').textContent.startsWith('Or / Bitcoin · bitcoin / once troy'));
+ assert.ok($('price').textContent.includes('Ratio Or / Bitcoin [bitcoin / once troy]'));
+ assert.match($('metrics').querySelector('.value').textContent,/^0,0\d{3}$/);
+ $('ratioSwap').click();assert.ok($('priceTitle').textContent.startsWith('Bitcoin / Or · once troy / bitcoin'));
+ run("setLanguage('en')");assert.ok($('priceTitle').textContent.startsWith('Bitcoin / Gold · troy oz / bitcoin'));
+ run("setLanguage('fr')");$('ratioNum').value='usgs_or';$('ratioNum').dispatchEvent(new w.Event('change'));
+ assert.ok($('status').textContent.startsWith('Les deux séries du ratio'));assert.equal($('ratioControls').hidden,false);
+ run("setLanguage('ru')");assert.ok($('status').textContent.startsWith('У двух рядов отношения'));
+ run("setLanguage('fr');ratioPair.num='insee_or';ratioPair.den='insee_argent';asset='or';nav();setRange(0)");
+ assert.equal($('ratioControls').hidden,true);assert.equal($('seriesSelect').hidden,false);
  // The registry accepts further complete locales without a fixed language switch.
  run(`I18N_CATALOGS.es={...I18N_CATALOGS.en,label:'Test language',locale:'es-ES',messages:Object.fromEntries(Object.entries(I18N_CATALOGS.en.messages).map(([k,v])=>[k,'⟦'+v+'⟧']))};setLanguage('es');`);
  assert.equal(w.document.documentElement.lang,'es');assert.ok($('methodTab').textContent.startsWith('⟦'));

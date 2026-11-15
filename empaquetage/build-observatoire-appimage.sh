@@ -6,7 +6,7 @@
 #  Usage : ./build-observatoire-appimage.sh                 # → dist/Observatoire-v<version>-x86_64.AppImage
 #          ./build-observatoire-appimage.sh --install       # + entrée de menu (sans root)
 #          ./build-observatoire-appimage.sh --uninstall     # retire l'entrée de menu
-#          PRODUCT_VERSION=0.3.0 ./build-observatoire-appimage.sh
+#          PRODUCT_VERSION=0.4.0 ./build-observatoire-appimage.sh
 #          NW_FLAVOR=sdk ./build-observatoire-appimage.sh   # avec DevTools, pour sonder
 #
 #  Livraison : l'AppImage livrable (saveur normal) est aussi COPIÉE dans le
@@ -41,7 +41,7 @@ APPNAME="Observatoire"
 LOWER="observatoire"
 
 # La version du LIVRABLE : écrite ici seulement.
-PRODUCT_VERSION="${PRODUCT_VERSION:-0.2.0}"
+PRODUCT_VERSION="${PRODUCT_VERSION:-0.3.0}"
 FLAVOR="${NW_FLAVOR:-normal}"
 NW_VERSION="v0.113.0"
 

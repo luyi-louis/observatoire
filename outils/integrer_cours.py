@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Embed the complete INSEE history (mises_a_jour/historique_complet.json) in the standalone HTML.
+"""Embed the complete history (mises_a_jour/historique_complet.json) in the standalone HTML:
+the four INSEE series, plus bitcoin (Bitstamp) when the collection has it.
 
 Same transformation as installHistory() in the page: DATA[key] = rows,
 META[key] = the series without its rows, plus the package's retrievedAt.
@@ -25,12 +26,21 @@ def validate(package):
         raise ValueError('Format de collecte non reconnu (observatoire-insee-v1 attendu).')
     if not isinstance(package.get('retrievedAt'), str) or not isinstance(package.get('series'), dict):
         raise ValueError('Collecte sans date de récupération ou sans séries.')
-    if set(package['series']) != set(collector.SOURCES):
+    keys = set(package['series'])
+    if not set(collector.SOURCES) <= keys:
         raise ValueError('Les quatre séries or, argent, brent et cuivre sont exigées ensemble.')
-    for key, spec in collector.SOURCES.items():
+    if keys - set(collector.SOURCES) - set(collector.MARKET_SOURCES):
+        raise ValueError(f'Série inconnue : {sorted(keys - set(collector.SOURCES) - set(collector.MARKET_SOURCES))}.')
+    for key in series_keys(package):
         item = package['series'][key]
-        if item.get('idbank') != spec['id'] or item.get('unit') != spec['unit']:
-            raise ValueError(f'Série {key} : identifiant INSEE ou unité différent du catalogue.')
+        if key in collector.SOURCES:
+            spec = collector.SOURCES[key]
+            if item.get('idbank') != spec['id'] or item.get('unit') != spec['unit']:
+                raise ValueError(f'Série {key} : identifiant INSEE ou unité différent du catalogue.')
+        else:
+            spec = collector.MARKET_SOURCES[key]
+            if item.get('market') != spec['market'] or item.get('unit') != spec['unit']:
+                raise ValueError(f'Série {key} : marché ou unité différent du catalogue.')
         rows = item.get('rows')
         if not isinstance(rows, list) or len(rows) < 2:
             raise ValueError(f'Série {key} : historique insuffisant.')
@@ -45,6 +55,11 @@ def validate(package):
     return package
 
 
+def series_keys(package):
+    # INSEE first, then the market series present: this order is the order of the buttons in the page.
+    return [*collector.SOURCES, *(k for k in collector.MARKET_SOURCES if k in package['series'])]
+
+
 def js_literal(value):
     # Same escaping as the translation embed: no '</script>' can close the block early.
     return (json.dumps(value, ensure_ascii=False, separators=(',', ':'))
@@ -54,7 +69,7 @@ def js_literal(value):
 def build(html_path=ROOT / 'Observatoire.html', source=ROOT / 'mises_a_jour' / 'historique_complet.json', check=False):
     package = validate(json.loads(Path(source).read_text(encoding='utf-8')))
     data, meta = {}, {}
-    for key in collector.SOURCES:
+    for key in series_keys(package):
         item = package['series'][key]
         data[key] = item['rows']
         meta[key] = {k: v for k, v in item.items() if k != 'rows'}

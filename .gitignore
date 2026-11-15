@@ -27,3 +27,7 @@ private/
 # Empaquetage : runtimes téléchargés et livrables construits
 empaquetage/cache/
 empaquetage/dist/
+
+# Pages brutes Bitstamp des collectes du bitcoin : gardées dans l'archive locale, pas versionnées
+# (conditions de redistribution non établies) ; leur empreinte SHA-256 est dans cours-insee.json.
+mises_a_jour/*/source-bitstamp-*.json

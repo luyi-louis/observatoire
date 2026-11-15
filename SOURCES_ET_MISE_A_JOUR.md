@@ -11,6 +11,10 @@ Documentation vérifiée le 5 septembre 2026. L’onglet **Sources & mise à jou
 | Brent | [010002077](https://www.insee.fr/fr/statistiques/serie/010002077) | USD par baril | Identique |
 | Cuivre | [010002052](https://www.insee.fr/fr/statistiques/serie/010002052) | USD par tonne | Identique |
 
+| Bitcoin | Aucune : [API publique Bitstamp](https://www.bitstamp.net/api/), paire BTC/USD | Clôtures quotidiennes (00:00 UTC), USD | USD par bitcoin, moyenne mensuelle des jours du mois |
+
+**Bitcoin.** Aucun diffuseur statistique ne publie son cours. Le collecteur lit les bougies quotidiennes BTC/USD de Bitstamp (depuis le 18 août 2011, sans clé ni compte, par pages de 1000 jours) et retient, pour chaque mois civil **complet**, la moyenne arithmétique des clôtures : le premier mois (partiel) et le mois en cours sont écartés, un jour manquant arrête la collecte du bitcoin plutôt que d’être interpolé. C’est le cours d’une seule plateforme, pas un indice. Si Bitstamp ne répond pas, les séries INSEE sont tout de même actualisées et l’historique du bitcoin est conservé. Les pages brutes (environ 740 Ko par collecte) restent dans le dossier daté de `mises_a_jour/` mais ne sont pas versionnées, leurs conditions de redistribution n’étant pas établies ; leur empreinte SHA-256 est enregistrée dans `cours-insee.json`.
+
 Le collecteur utilise des séries mensuelles diffusées par l’INSEE, pas un flux de cotations instantanées. La date de consultation, la date de publication et le dernier mois observé sont trois informations distinctes. Certaines valeurs historiques peuvent être révisées.
 
 Chercher une nouvelle série dans le [catalogue INSEE](https://www.insee.fr/fr/information/2411675), puis vérifier sa fiche : identifiant, unité, fréquence, prix/indice, comptant/terme, méthode et éventuel arrêt de série. Les archives locales 010002091 et 010002094 sont des indices en euros base 2010 et ne correspondent pas aux séries de prix du tableau. Le CSV cuivre initial du dossier duplique l’or ; il n’est pas utilisé comme base de raccord par le collecteur.
@@ -27,7 +31,7 @@ Depuis le dossier du projet :
 python3 outils/actualiser_cours.py --serve
 ```
 
-Ouvrir **http://127.0.0.1:8765**, puis **Sources & mise à jour → Rechercher les dernières données**. Examiner les périodes et les différences affichées, puis cliquer sur **Utiliser ces données**. L’opération fusionne les quatre historiques ensemble, en conservant tous les mois déjà présents ; le ratio est recalculé avec des unités compatibles. Les CSV et le HTML sur disque ne sont pas écrasés.
+Ouvrir **http://127.0.0.1:8765**, puis **Sources & mise à jour → Rechercher les dernières données**. Examiner les périodes et les différences affichées, puis cliquer sur **Utiliser ces données**. L’opération fusionne les historiques ensemble (quatre séries INSEE, plus le bitcoin), en conservant tous les mois déjà présents ; les ratios sont recalculés avec des unités compatibles. Les CSV et le HTML sur disque ne sont pas écrasés.
 
 Le serveur écoute uniquement sur la boucle locale. Ctrl+C l’arrête. Pour changer de port : `--port 8766`, puis utiliser l’adresse affichée dans le terminal. Il ne faut pas lancer un simple `python3 -m http.server` : ce dernier ne fournit pas le point d’accès de collecte.
 

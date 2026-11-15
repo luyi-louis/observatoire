@@ -1,14 +1,18 @@
 # Observatoire
 
 Application HTML autonome pour explorer les historiques de l’or, de l’argent,
-du cuivre et du pétrole, avec une présentation scientifique des graphiques.
+du cuivre, du pétrole et du bitcoin, et le ratio entre deux d’entre eux, avec une
+présentation scientifique des graphiques.
 
 **[Télécharger le projet](https://github.com/luyi-louis/observatoire/archive/refs/heads/main.zip)**,
 décompresser puis ouvrir **[Observatoire.html](Observatoire.html)** dans un navigateur.
 L’application fonctionne hors ligne, sans installation ni dépendance distante.
 
 - Historiques intégrés : métaux dès **1900**, pétrole américain dès **1859**,
-  séries mensuelles Banque mondiale dès **1960** et INSEE dès **1990**.
+  séries mensuelles Banque mondiale dès **1960** et INSEE dès **1990** ;
+  bitcoin mensuel dès **2011** (moyennes des clôtures quotidiennes Bitstamp).
+- **Ratio libre** entre deux séries quelconques de même fréquence (or / argent,
+  or / bitcoin, cuivre / bitcoin…), avec son unité déduite (bitcoins par once…).
 - Sources sélectionnables, avec leurs unités, fréquences et définitions explicites.
   Les séries annuelles et mensuelles restent distinctes ; le pétrole américain
   historique n’est pas assimilé au Brent.
@@ -19,7 +23,7 @@ L’application fonctionne hors ligne, sans installation ni dépendance distante
   L’or s’affiche par once troy ou par gramme.
 - Interface intégralement disponible en **français, anglais et russe**,
   en thème clair ou **sombre** (ou celui du système).
-- Actualisation INSEE à la demande avec conservation de l’historique.
+- Actualisation INSEE et bitcoin à la demande avec conservation de l’historique.
 
 ## Documentation
 

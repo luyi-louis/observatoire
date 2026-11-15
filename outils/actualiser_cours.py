@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Collecte INSEE à la demande ; bibliothèque standard Python uniquement."""
+"""Collecte INSEE (et bitcoin chez Bitstamp) à la demande ; bibliothèque standard Python uniquement."""
 import argparse
+import calendar
 from datetime import datetime, timezone
 import hashlib
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -22,6 +23,18 @@ SOURCES = {
     'cuivre': {'id': '010002052', 'name': 'Cuivre', 'unit': 'USD / tonne', 'sourceUnit': 'USD', 'factor': 1, 'term': 'cuivre'},
 }
 MAX_BYTES = 10_000_000
+USER_AGENT = 'Observatoire-local/1.0 (monthly data research)'
+
+# Bitcoin: no statistical agency publishes it. Bitstamp's public market API gives daily BTC/USD candles
+# since 2011-08-18; one month = arithmetic mean of the daily closes (00:00 UTC) of a complete calendar month.
+BITSTAMP_API = 'https://www.bitstamp.net/api/v2/ohlc/btcusd/'
+BITSTAMP_FIRST_DAY = 1312156800  # 2011-08-01 00:00 UTC, before the first quote
+DAY = 86400
+MARKET_SOURCES = {
+    'bitcoin': {'market': 'bitstamp:btcusd', 'pair': 'BTC/USD', 'name': 'Bitcoin', 'unit': 'USD / bitcoin',
+                'source': 'Bitstamp', 'sourceUrl': 'https://www.bitstamp.net/api/',
+                'title': 'Bitcoin · BTC/USD Bitstamp · moyenne mensuelle des clôtures quotidiennes (00:00 UTC)'},
+}
 
 def parse_sdmx(raw):
     if len(raw) > MAX_BYTES or b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper():
@@ -73,7 +86,7 @@ def collect():
     url = API + '+'.join(s['id'] for s in SOURCES.values())
     request = urllib.request.Request(url, headers={
         'Accept': 'application/vnd.sdmx.structurespecificdata+xml;version=2.1',
-        'User-Agent': 'Observatoire-local/1.0 (monthly data research)'})
+        'User-Agent': USER_AGENT})
     with urllib.request.urlopen(request, timeout=30) as response:
         if response.status != 200:
             raise ValueError(f'Réponse INSEE inattendue : HTTP {response.status}.')
@@ -85,6 +98,98 @@ def collect():
         for row in item['rows']:
             row['retrievedAt'] = package['retrievedAt']
     return package, raw
+
+def parse_bitstamp(pages, now):
+    """Daily BTC/USD closes → monthly means of the complete calendar months before `now` (UTC)."""
+    closes = {}
+    for raw in pages:
+        if len(raw) > MAX_BYTES:
+            raise ValueError('Réponse Bitstamp trop volumineuse.')
+        try:
+            data = json.loads(raw)['data']
+            candles = data['ohlc']
+        except (ValueError, KeyError, TypeError):
+            raise ValueError('Réponse Bitstamp illisible.') from None
+        if data.get('pair') != MARKET_SOURCES['bitcoin']['pair'] or not isinstance(candles, list):
+            raise ValueError('Réponse Bitstamp inattendue : paire ou format modifié.')
+        for candle in candles:
+            try:
+                stamp, close = int(candle['timestamp']), float(candle['close'])
+            except (KeyError, TypeError, ValueError):
+                raise ValueError('Cotation Bitstamp illisible.') from None
+            if stamp % DAY or not math.isfinite(close) or close <= 0:
+                raise ValueError('Cotation Bitstamp invalide (jour ou prix).')
+            if closes.setdefault(stamp, close) != close:
+                raise ValueError('Cotation Bitstamp dupliquée et contradictoire.')
+    stamps = sorted(closes)
+    if any(b - a != DAY for a, b in zip(stamps, stamps[1:])):
+        raise ValueError('Jour manquant dans l’historique Bitstamp ; aucune interpolation automatique.')
+    by_month = {}
+    for stamp in stamps:
+        by_month.setdefault(datetime.fromtimestamp(stamp, timezone.utc).strftime('%Y-%m'), []).append(closes[stamp])
+    current = now.astimezone(timezone.utc).strftime('%Y-%m')
+    rows = [{'date': month, 'price': round(math.fsum(values) / len(values), 6), 'days': len(values)}
+            for month, values in sorted(by_month.items())
+            # The first month (partial) and the month in progress are left out.
+            if month < current and len(values) == calendar.monthrange(int(month[:4]), int(month[5:]))[1]]
+    if len(rows) < 2:
+        raise ValueError('Historique Bitstamp insuffisant.')
+    spec = MARKET_SOURCES['bitcoin']
+    return {'name': spec['name'], 'market': spec['market'], 'pair': spec['pair'], 'unit': spec['unit'],
+            'title': spec['title'], 'source': spec['source'], 'sourceUrl': spec['sourceUrl'],
+            'lastQuote': datetime.fromtimestamp(stamps[-1], timezone.utc).strftime('%Y-%m-%d'),
+            'skippedMonths': [], 'rows': rows}
+
+
+def collect_market(now=None):
+    """Bitcoin from Bitstamp. A failure is reported, not raised: the INSEE update must not depend on it."""
+    now = now or datetime.now(timezone.utc)
+    pages, start = [], BITSTAMP_FIRST_DAY
+    try:
+        while start <= now.timestamp():
+            if len(pages) >= 40:
+                raise ValueError('pagination Bitstamp anormalement longue')
+            request = urllib.request.Request(f'{BITSTAMP_API}?step={DAY}&limit=1000&start={start}',
+                                             headers={'Accept': 'application/json', 'User-Agent': USER_AGENT})
+            with urllib.request.urlopen(request, timeout=30) as response:
+                if response.status != 200:
+                    raise ValueError(f'HTTP {response.status}')
+                raw = response.read(MAX_BYTES + 1)
+            pages.append(raw)
+            try:
+                candles = json.loads(raw)['data']['ohlc']
+                # A page covers 1000 days from `start`, even before the first quote: advance from what came back.
+                start = int(candles[-1]['timestamp']) + DAY if candles else start + 1000 * DAY
+            except (ValueError, KeyError, TypeError, IndexError):
+                raise ValueError('réponse Bitstamp illisible') from None
+        series = parse_bitstamp(pages, now)
+    except (urllib.error.URLError, OSError, ValueError) as exc:
+        return {}, {}, [f'bitcoin : {exc}']
+    raws = {f'source-bitstamp-{i:02d}.json': raw for i, raw in enumerate(pages)}
+    # The raw pages stay in the local archive (not versioned); their digest makes the monthly means checkable.
+    series.update(requestUrl=f'{BITSTAMP_API}?step={DAY}&limit=1000&start=<jour>', pages=len(pages),
+                  sha256=hashlib.sha256(b''.join(pages)).hexdigest())
+    return {'bitcoin': series}, raws, []
+
+
+def _union(key, old, new, previous, current):
+    by_date = {}
+    old_rows = [dict(r, retrievedAt=r.get('retrievedAt', previous.get('retrievedAt'))) for r in old['rows']]
+    new_rows = [dict(r, retrievedAt=r.get('retrievedAt', current.get('retrievedAt'))) for r in new['rows']]
+    for item in old_rows + new_rows:
+        date, price = item.get('date', ''), item.get('price')
+        if (not re.fullmatch(r'\d{4}-(0[1-9]|1[0-2])', date)
+                or not isinstance(price, (int, float)) or isinstance(price, bool)
+                or not math.isfinite(price) or price <= 0):
+            raise ValueError(f'Observation invalide dans le cache : {key}.')
+        by_date[date] = item
+    new_dates = {r['date'] for r in new['rows']}
+    new['retainedMonths'] = sorted(set(by_date) - new_dates)
+    new['rows'] = [by_date[date] for date in sorted(by_date)]
+    indices = [int(r['date'][:4])*12+int(r['date'][5:]) for r in new['rows']]
+    if any(b-a != 1 for a,b in zip(indices,indices[1:])):
+        raise ValueError(f'Lacune après fusion de l’historique : {key}.')
+
 
 def merge_packages(previous, current):
     """Union by month for the same INSEE series and canonical unit only."""
@@ -100,31 +205,39 @@ def merge_packages(previous, current):
         old, new = previous['series'][key], merged['series'][key]
         if any(item.get('idbank') != spec['id'] or item.get('unit') != spec['unit'] for item in [old, new]):
             raise ValueError(f'Historique incompatible pour {key} : source ou unité différente.')
-        by_date = {}
-        old_rows = [dict(r, retrievedAt=r.get('retrievedAt', previous.get('retrievedAt'))) for r in old['rows']]
-        new_rows = [dict(r, retrievedAt=r.get('retrievedAt', current.get('retrievedAt'))) for r in new['rows']]
-        for item in old_rows + new_rows:
-            date, price = item.get('date', ''), item.get('price')
-            if (not re.fullmatch(r'\d{4}-(0[1-9]|1[0-2])', date)
-                    or not isinstance(price, (int, float)) or isinstance(price, bool)
-                    or not math.isfinite(price) or price <= 0):
-                raise ValueError(f'Observation invalide dans le cache : {key}.')
-            by_date[date] = item
-        new_dates = {r['date'] for r in new['rows']}
-        new['retainedMonths'] = sorted(set(by_date) - new_dates)
-        new['rows'] = [by_date[date] for date in sorted(by_date)]
-        indices = [int(r['date'][:4])*12+int(r['date'][5:]) for r in new['rows']]
-        if any(b-a != 1 for a,b in zip(indices,indices[1:])):
-            raise ValueError(f'Lacune après fusion de l’historique : {key}.')
+        _union(key, old, new, previous, current)
+    # Optional market series: absent from older caches, or not collected this time (source unreachable).
+    for key, spec in MARKET_SOURCES.items():
+        old, new = previous['series'].get(key), merged['series'].get(key)
+        for item in [old, new]:
+            if item is not None and (not isinstance(item, dict) or not isinstance(item.get('rows'), list)
+                                     or item.get('market') != spec['market'] or item.get('unit') != spec['unit']):
+                raise ValueError(f'Historique incompatible pour {key} : source ou unité différente.')
+        if old is None:
+            continue
+        if new is None:
+            kept = json.loads(json.dumps(old))
+            kept['rows'] = [dict(r, retrievedAt=r.get('retrievedAt', previous.get('retrievedAt'))) for r in kept['rows']]
+            kept['retainedMonths'] = [r.get('date') for r in kept['rows']]
+            merged['series'][key] = kept
+        else:
+            _union(key, old, new, previous, current)
     merged['previousRetrieval'] = previous.get('retrievedAt')
     return merged
 
 
 def collect_preserving_history(directory):
     current, raw = collect()
+    market, market_raw, warnings = collect_market()
+    for item in market.values():
+        for row in item['rows']:
+            row['retrievedAt'] = current['retrievedAt']
+    current['series'].update(market)
+    if warnings:
+        current['warnings'] = warnings
     cache = Path(directory) / 'historique_complet.json'
     previous = json.loads(cache.read_text(encoding='utf-8')) if cache.exists() else None
-    return merge_packages(previous, current), raw
+    return merge_packages(previous, current), {'source-insee.xml': raw, **market_raw}
 
 
 def archive(package, raw, directory):
@@ -132,7 +245,8 @@ def archive(package, raw, directory):
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S_%fZ')
     target = Path(directory) / stamp
     target.mkdir(parents=True, exist_ok=False)
-    (target / 'source-insee.xml').write_bytes(raw)
+    for name, content in ({'source-insee.xml': raw} if isinstance(raw, bytes) else raw).items():
+        (target / name).write_bytes(content)
     payload = json.dumps(package, ensure_ascii=False, indent=2)
     (target / 'cours-insee.json').write_text(payload, encoding='utf-8')
     # Atomic replacement of the complete cache, after the dated archive is written.
@@ -202,6 +316,8 @@ def main():
         print(f'Collecte validée : {target / "cours-insee.json"}')
         for key, item in package['series'].items():
             print(f"{key} : {len(item['rows'])} mois, {item['rows'][0]['date']} → {item['rows'][-1]['date']}, {item['unit']}")
+        for warning in package.get('warnings', []):
+            print(f'Non actualisé (historique conservé) : {warning}', file=sys.stderr)
     except (ValueError, ET.ParseError, OSError) as exc:
         print(f'Échec de collecte : {exc}', file=sys.stderr)
         sys.exit(1)

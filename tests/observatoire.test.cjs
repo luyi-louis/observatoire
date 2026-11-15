@@ -104,3 +104,27 @@ assert.equal(run('JSON.stringify(scaleWindow([0,1],.5,2))'),'[0,1]');
 assert.ok(run('boundedWindow(-10,10)[0]===0 && boundedWindow(-10,10)[1]===1'));
 assert.ok(run('boundedWindow(.5,.5)[1]>boundedWindow(.5,.5)[0]'));
 console.log('OK : conversions de masse réversibles et fenêtres de zoom bornées.');
+// Bitcoin (Bitstamp) and the free ratio A / B: any two series of the same frequency, unit deduced.
+assert.equal(run('DATA.bitcoin[0].date'),'2011-09');assert.equal(run('META.bitcoin.unit'),'USD / bitcoin');
+assert.ok(run("allSeries().some(s=>s.key==='bitstamp_bitcoin'&&s.asset==='bitcoin')"));
+run("asset='ratio';ratioPair.num='insee_or';ratioPair.den='bitstamp_bitcoin'");
+assert.equal(run('ratioUnit()'),'bitcoin / once troy');
+assert.equal(run('getRows()[0].date'),'2011-09');assert.equal(run('getRows().at(-1).date'),LAST);
+assert.ok(Math.abs(run('getRows()[0].price')-run("DATA.or.find(r=>r.date==='2011-09').price/DATA.bitcoin[0].price"))<1e-12);
+run("ratioPair.num='insee_cuivre'");assert.equal(run('ratioUnit()'),'bitcoin / tonne');
+run("ratioPair.num='bitstamp_bitcoin';ratioPair.den='insee_argent'");assert.equal(run('ratioUnit()'),'once troy / bitcoin');
+run("ratioPair.num='usgs_or';ratioPair.den='usgs_argent'");assert.equal(run('ratioUnit()'),'1');assert.equal(run('annualAnalysis()'),true);
+assert.equal(run('getRows()[0].date'),'1900');assert.equal(run('getRows().at(-1).date'),'2021');
+run("ratioPair.den='insee_argent'");assert.equal(run('getRows().length'),0,'Annual and monthly series are never mixed');
+run("ratioPair.num='wb_or';ratioPair.den='wb_argent'");assert.equal(run('getRows()[0].date'),'1960-01');assert.equal(run('ratioUnit()'),'1');
+run("ratioPair.num='disparu';ratioPair.den='disparu'");assert.equal(run("ratioOperands().num.key+'/'+ratioOperands().den.key"),'insee_or/insee_argent');
+// A collected bitcoin series is optional, but checked when present.
+run(`packageFixture.series.bitcoin={market:'bitstamp:btcusd',unit:'USD / bitcoin',rows:[{date:'2026-01',price:90000},{date:'2026-02',price:95000}]}`);
+assert.equal(run('validateOfficial(packageFixture).series.bitcoin.source'),'Bitstamp');
+for (const mutation of ["p.series.bitcoin.unit='EUR / bitcoin'", "p.series.bitcoin.market='kraken:xbtusd'", "p.series.bitcoin.rows[1].date='2026-04'", "p.series.bitcoin.rows[0].price=0"]) {
+  assert.throws(() => run(`(()=>{const p=JSON.parse(JSON.stringify(packageFixture));${mutation};return validateOfficial(p)})()`));
+}
+assert.equal(run('mergeOfficialHistory(packageFixture).series.bitcoin.rows[0].date'),'2011-09');
+assert.equal(run("JSON.stringify(validateOfficial({...packageFixture,warnings:['bitcoin : hors ligne']}).warnings)"),'["bitcoin : hors ligne"]');
+run('delete packageFixture.series.bitcoin');
+console.log('OK : bitcoin, ratio libre entre deux séries de même fréquence et unité déduite.');

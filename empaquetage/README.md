@@ -4,12 +4,12 @@ Un seul fichier, sans installation ni droits administrateur : une fenêtre
 NW.js qui affiche `Observatoire.html`.
 
 ```bash
-./empaquetage/build-observatoire-appimage.sh             # → empaquetage/dist/Observatoire-v0.2.0-x86_64.AppImage
+./empaquetage/build-observatoire-appimage.sh             # → empaquetage/dist/Observatoire-v0.3.0-x86_64.AppImage
 ./empaquetage/build-observatoire-appimage.sh --install   # + entrée dans le menu des applications
 ./empaquetage/build-observatoire-appimage.sh --uninstall # retire l'entrée (garde les collectes)
 ```
 
-`PRODUCT_VERSION=0.3.0` change la version du livrable, écrite dans le script
+`PRODUCT_VERSION=0.4.0` change la version du livrable, écrite dans le script
 seulement. `NW_FLAVOR=sdk` construit une variante avec DevTools, nommée
 `…-sdk-…`, qui sert uniquement aux vérifications automatiques.
 
